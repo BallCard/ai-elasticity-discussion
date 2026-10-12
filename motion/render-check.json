@@ -1,7 +1,7 @@
 {
   "date": "2026-10-12",
-  "output": "output/pinn-elasticity.mp4",
-  "sha256": "1F1882D039DE9306380CD8AC8C34A4DE596E2F68A01F71323E95FAAC9B3A293D",
+  "output": "output/pinn-elasticity-anthropic.mp4",
+  "sha256": "28F91F4C984CB6FB084B023052F1CE9EB230BDDFD92F920FC829B50D1EB5A008",
   "media": {
     "programs": [],
     "stream_groups": [],
@@ -12,7 +12,6 @@
         "width": 1920,
         "height": 1080,
         "pix_fmt": "yuvj420p",
-        "color_range": "pc",
         "r_frame_rate": "30/1",
         "nb_frames": "1080",
         "side_data_list": [
@@ -22,13 +21,16 @@
     ],
     "format": {
       "duration": "36.000000",
-      "size": "3101355"
+      "size": "3358199"
     }
   },
-  "audio_stream_count": 0,
+  "style": "Anthropic-inspired warm paper, charcoal, terracotta and muted sage",
+  "font": "Source Han Serif CN, original user-installed Regular/Medium/Bold OTF",
+  "font_files_match_user_originals": true,
+  "source_glyph_coverage": "passed; unsupported Unicode indices composed from ordinary glyphs in the same font",
   "full_decode": "passed",
-  "source_data": "Semantically identical to demo/training-data.json",
   "source_lint": "passed",
-  "manual_visual_review": "Five scene keyframes plus a 12-frame contact sheet; Chinese text and equations reviewed, training iteration label layout corrected",
-  "limits": "First teaching cut of one 1D PINN example, not an engineering validation or final group presentation"
+  "manual_visual_review": "Five full-resolution styled keyframes and a 12-frame contact sheet reviewed",
+  "data_mode": "Labelled constructed candidate-function trajectory with analytically computed residual; final validation figures use actual 3000-step PINN / 401-point results",
+  "limits": "Teaching cut of one 1D example; constructed path is not optimizer history"
 }

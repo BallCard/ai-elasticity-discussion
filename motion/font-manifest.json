@@ -1,0 +1,30 @@
+{
+  "family": "Source Han Serif CN",
+  "source": "Original user-installed OTF font files, copied without glyph modifications",
+  "loaded_weights": [
+    400,
+    500,
+    700
+  ],
+  "records": [
+    {
+      "file": "SourceHanSerifCN-Bold.otf",
+      "sha256": "e3b26c0fd0dff4aa38d3ae270d223f21bd6d8e5cb79b2b2105bc4c46e6be3c92",
+      "bytes": 11762680,
+      "postscript_name": "SourceHanSerifCN-Bold"
+    },
+    {
+      "file": "SourceHanSerifCN-Medium.otf",
+      "sha256": "4b6ac7aa749ae3ccb4161e5b133fb2f59712b6f5a1218d358948a81c10d8eed2",
+      "bytes": 11364128,
+      "postscript_name": "SourceHanSerifCN-Medium"
+    },
+    {
+      "file": "SourceHanSerifCN-Regular.otf",
+      "sha256": "8c475e5cad6e836ddead05e73da7c184b0e11f13ddeef679348e784875426030",
+      "bytes": 11248552,
+      "postscript_name": "SourceHanSerifCN-Regular"
+    }
+  ],
+  "unicode_handling": "Super/subscript characters composed from ordinary glyphs; calligraphic L composed as ordinary L; rendering aborts on font load failure"
+}

@@ -1,12 +1,13 @@
 import React from "react";
 import data from "./data/training.json";
+import {SOURCE_HAN_FAMILY} from "./load-fonts.js";
 
 // Every position, opacity and path is a pure function of the requested frame.
 // No clock, random values, mutable simulation state or CSS animation is used.
-const C = {bg: "#0c1823", panel: "#142735", text: "#f2f6f8", muted: "#a6bccb",
-  line: "#2b4253", teal: "#55dec4", orange: "#ffc184", purple: "#bcabff"};
-const FONT = '"Microsoft YaHei", "Noto Sans SC", sans-serif';
-const MATH = '"Cambria Math", "Times New Roman", "Microsoft YaHei", serif';
+const C = {bg: "#faf9f5", panel: "#f0eee6", text: "#25231f", muted: "#747169",
+  line: "#ddd9ce", teal: "#c66b4e", orange: "#3b3935", purple: "#65816d"};
+const FONT = SOURCE_HAN_FAMILY;
+const MATH = SOURCE_HAN_FAMILY;
 const clamp = x => Math.max(0, Math.min(1, x));
 const ease = x => {const t = clamp(x); return t * t * (3 - 2 * t);};
 const enter = (t, delay = 0, length = .65) => ease((t - delay) / length);
@@ -22,13 +23,27 @@ const stages = [
   {start: 0, end: 6, tag: "01 / 问题", title: "先把问题说清楚", sub: "几何、材料、载荷与边界，共同定义一个弹性问题"},
   {start: 6, end: 12, tag: "02 / 方程", title: "三类关系，合成一个方程", sub: "材料与假设固定，求解函数必须满足物理关系"},
   {start: 12, end: 18, tag: "03 / 网络", title: "用网络表示解，用方程约束它", sub: "学的是一个可调函数；这里没有提供解析位移标签"},
-  {start: 18, end: 29, tag: "04 / 训练", title: "只用方程，让预测逐步改善", sub: "回放真实训练快照：优化进度不代表物理时间"},
+  {start: 18, end: 29, tag: "04 / 训练", title: "让一个函数，逐渐接近物理解", sub: "构造示意：候选函数 → 检查残差 → 调整函数；实测结果在最后展示"},
   {start: 29, end: 36, tag: "05 / 核验", title: "看着相似，还要独立核验", sub: "在未参与优化的 401 个位置，检查解和它的空间导数"},
 ];
 
-const Text = ({x, y, size = 36, fill = C.text, anchor = "start", math = false, children, ...rest}) =>
+// Use real glyphs from Source Han Serif CN for indices as well. Its font files
+// omit several Unicode super/subscripts and calligraphic L, so compose these
+// from ordinary digits rather than allowing another font to substitute them.
+const indexedText = value => {
+  if (typeof value !== "string") return value;
+  const sub = {"₀": "0", "₁": "1", "₂": "2", "₃": "3", "₄": "4", "₅": "5", "₆": "6", "₇": "7", "₈": "8", "₉": "9"};
+  const sup = {"⁻": "−", "⁺": "+", "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9"};
+  return value.replaceAll("ℒ", "L").split(/([₀₁₂₃₄₅₆₇₈₉]+|[⁻⁺⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g).map((part, i) => {
+    if (part[0] in sub) return <tspan key={i} baselineShift="sub" fontSize="65%">{[...part].map(c => sub[c]).join("")}</tspan>;
+    if (part[0] in sup) return <tspan key={i} baselineShift="super" fontSize="65%">{[...part].map(c => sup[c]).join("")}</tspan>;
+    return part;
+  });
+};
+
+const Text = ({x, y, size = 36, fill = C.text, anchor = "start", math = false, children, weight = 400, ...rest}) =>
   <text x={x} y={y} fontSize={size} fill={fill} textAnchor={anchor}
-    fontFamily={math ? MATH : FONT} {...rest}>{children}</text>;
+    fontFamily={math ? MATH : FONT} fontWeight={weight} {...rest}>{indexedText(children)}</text>;
 
 const Reveal = ({t, delay = 0, children}) => {
   const p = enter(t, delay);
@@ -75,7 +90,7 @@ const Equations = ({t}) => {
   const cards = [{label: "几何关系", math: "ε = du/dx"}, {label: "本构关系", math: "N = EA · ε"}, {label: "平衡关系", math: "dN/dx + q = 0"}];
   return <>
     {cards.map((card, i) => <Reveal key={card.label} t={t} delay={i * .55}>
-      <rect x={200 + i * 520} y={305} width={480} height={190} rx={12} fill={C.panel}/>
+      <rect x={200 + i * 520} y={305} width={480} height={190} rx={2} fill={C.panel}/>
       <Text x={440 + i * 520} y={359} size={30} fill={C.muted} anchor="middle">{card.label}</Text>
       <Text x={440 + i * 520} y={434} size={52} math anchor="middle" fill={C.teal}>{card.math}</Text>
     </Reveal>)}
@@ -113,7 +128,7 @@ const Network = ({t}) => {
       <Text x={665} y={820} size={25} fill={C.muted} anchor="middle">隐藏节点仅作示意</Text>
     </Reveal>
     <Reveal t={t} delay={1.6}>
-      <rect x={1220} y={322} width={510} height={178} rx={12} fill={C.panel}/>
+      <rect x={1220} y={322} width={510} height={178} rx={2} fill={C.panel}/>
       <Text x={1475} y={368} size={27} fill={C.muted} anchor="middle">硬边界位移函数</Text>
       <Text x={1475} y={441} math size={45} anchor="middle" fill={C.teal}>Uθ = ξ(1−ξ)Nθ</Text>
       <Text x={1475} y={553} size={27} fill={C.muted} anchor="middle">空间求导 → 方程残差</Text>
@@ -150,28 +165,38 @@ const Plot = ({box, values, exact, domain, label, residual = false}) => {
 };
 
 const trainingAt = t => {
-  const position = Math.pow(clamp(t / 10.5), 1.6) * (data.snapshots.length - 1);
-  const lo = Math.floor(position), hi = Math.min(lo + 1, data.snapshots.length - 1), mix = position - lo;
-  const a = data.snapshots[lo], b = data.snapshots[hi];
-  return {record: a, u: a.u.map((v, i) => lerp(v, b.u[i], mix)), r: a.r.map((v, i) => lerp(v, b.r[i], mix))};
+  // Deliberately constructed teaching path, clearly labelled in the scene.
+  // Every candidate satisfies the end conditions. Its residual is calculated
+  // analytically, rather than inventing optimizer logs or experiment metrics.
+  const p = ease(clamp(t / 10.4));
+  const amplitude = .27 * (1 - p) ** 1.6, tilt = .15 * (1 - p) ** 1.3;
+  const k = 3 * Math.PI;
+  const u = data.x.map((x, i) => data.exact_u[i] + amplitude * x * (1 - x) * Math.sin(k * x)
+    + tilt * x * (1 - x) * (2 * x - 1));
+  const r = data.x.map(x => amplitude * (-2 * Math.sin(k * x) + 2 * (1 - 2 * x) * k * Math.cos(k * x)
+    - x * (1 - x) * k * k * Math.sin(k * x)) + tilt * (6 - 12 * x));
+  const squaredError = u.reduce((sum, v, i) => sum + (v - data.exact_u[i]) ** 2, 0);
+  const squaredReference = data.exact_u.reduce((sum, v) => sum + v * v, 0);
+  return {u, r, relativeError: Math.sqrt(squaredError / squaredReference),
+    residualRms: Math.sqrt(r.reduce((sum, v) => sum + v * v, 0) / r.length), progress: p};
 };
 
 const Training = ({t}) => {
-  const {record, u, r} = trainingAt(t);
+  const {u, r, relativeError, residualRms, progress} = trainingAt(t);
   return <>
     <Plot box={{x: 230, y: 345, w: 900, h: 480}} values={u} exact={data.exact_u} domain={[-.005, .125]} label="位移 U（无量纲）"/>
     <line x1={775} x2={820} y1={306} y2={306} stroke={C.teal} strokeWidth={5}/>
-    <Text x={835} y={315} size={26}>网络</Text>
-    <line x1={940} x2={985} y1={306} y2={306} stroke={C.orange} strokeWidth={4} strokeDasharray="10 6"/>
-    <Text x={1000} y={315} size={26}>解析参考</Text>
-    <Plot box={{x: 1330, y: 345, w: 380, h: 230}} values={r} domain={[-.9, .9]} label="独立网格的方程残差" residual/>
-    <Text x={1280} y={715} size={28} fill={C.muted}>训练迭代</Text>
-    <Text x={1710} y={715} size={48} math anchor="end">{record.step} / 3000</Text>
-    <Text x={1280} y={789} size={28} fill={C.muted}>位移相对 L₂ 误差</Text>
-    <Text x={1710} y={789} size={48} math anchor="end" fill={C.teal}>{percent(record.relative_u_l2)}</Text>
-    <Text x={1280} y={860} size={28} fill={C.muted}>独立残差 RMS</Text>
-    <Text x={1710} y={860} size={43} math anchor="end" fill={C.purple}>{record.residual_rms.toExponential(2)}</Text>
-    <Text x={230} y={948} size={24} fill={C.muted}>64 个内部训练点 · 数值来自 401 点验证 · 曲线插值仅用于画面平滑</Text>
+    <Text x={835} y={315} size={26}>候选函数</Text>
+    <line x1={1000} x2={1045} y1={306} y2={306} stroke={C.orange} strokeWidth={4} strokeDasharray="10 6"/>
+    <Text x={1060} y={315} size={26}>参考</Text>
+    <Plot box={{x: 1330, y: 345, w: 380, h: 230}} values={r} domain={[-8, 8]} label="构造函数的方程残差" residual/>
+    <Text x={1280} y={715} size={28} fill={C.muted}>示意调整</Text>
+    <Text x={1710} y={715} size={46} math anchor="end">{Math.round(progress * 100)}%</Text>
+    <Text x={1280} y={789} size={27} fill={C.muted}>示意相对误差</Text>
+    <Text x={1710} y={789} size={46} math anchor="end" fill={C.teal}>{percent(relativeError)}</Text>
+    <Text x={1280} y={860} size={27} fill={C.muted}>示意残差 RMS</Text>
+    <Text x={1710} y={860} size={40} math anchor="end" fill={C.purple}>{residualRms.toExponential(2)}</Text>
+    <Text x={230} y={948} size={25} fill={C.muted}>构造的教学示意 · 用于解释优化方向 · 不是实验训练记录</Text>
   </>;
 };
 
@@ -183,11 +208,11 @@ const Validation = ({t}) => {
   return <>
     {values.map((v, i) => <Reveal key={v.label} t={t} delay={.3 + i * .35}>
       <Text x={380 + i * 580} y={394} size={29} fill={C.muted} anchor="middle">{v.label}</Text>
-      <Text x={380 + i * 580} y={506} size={i === 2 ? 81 : 102} math fill={v.color} anchor="middle">{v.value}</Text>
+      <Text x={380 + i * 580} y={506} size={i === 2 ? 78 : 98} math weight={500} fill={v.color} anchor="middle">{v.value}</Text>
     </Reveal>)}
     <Reveal t={t} delay={1.9}>
       <line x1={220} x2={1700} y1={577} y2={577} stroke={C.line} strokeWidth={2}/>
-      <Text x={960} y={670} size={51} anchor="middle">401 个独立位置 · 两端位移为 0</Text>
+      <Text x={960} y={670} size={49} weight={500} anchor="middle">实测核验：401 个独立位置 · 两端位移为 0</Text>
       <Text x={960} y={736} size={31} fill={C.muted} anchor="middle">参考解：U*(ξ) = sin(πξ)/π²；训练没有使用它的位移标签</Text>
     </Reveal>
     <Reveal t={t} delay={3.1}>
@@ -206,13 +231,13 @@ export const MotionScene = ({frame, fps, durationInFrames, layout}) => {
   const stage = stages[active], scale = Math.min(layout.videoWidth / 1920, layout.videoHeight / 1080);
   return <div style={{width: "100%", height: "100%", background: C.bg, overflow: "hidden", fontFamily: FONT}}>
     <svg width={1920} height={1080} viewBox="0 0 1920 1080" style={{transform: `scale(${scale})`, transformOrigin: "0 0"}}>
-      <defs><pattern id="grid" width={72} height={72} patternUnits="userSpaceOnUse"><circle cx={1} cy={1} r={1} fill={C.line}/></pattern></defs>
-      <rect width={1920} height={1080} fill={C.bg}/><rect width={1920} height={1080} fill="url(#grid)" opacity={.25}/>
+      <rect width={1920} height={1080} fill={C.bg}/>
       <Text x={112} y={88} size={27} fill={C.teal}>{stage.tag}</Text>
-      <Text x={112} y={171} size={65}>{stage.title}</Text>
+      <Text x={112} y={171} size={65} weight={500}>{stage.title}</Text>
       <Text x={112} y={236} size={31} fill={C.muted}>{stage.sub}</Text>
-      {stages.map((s, i) => <g key={s.tag} opacity={i === active ? 1 : .35}>
-        <circle cx={1460 + i * 72} cy={87} r={7} fill={C.teal}/>
+      {stages.map((s, i) => <g key={s.tag} opacity={i === active ? 1 : .45}>
+        <Text x={1310 + i * 112} y={88} size={25} fill={i === active ? C.teal : C.muted}>{s.tag.split(" / ")[1]}</Text>
+        {i === active ? <line x1={1310 + i * 112} x2={1364 + i * 112} y1={103} y2={103} stroke={C.teal} strokeWidth={2}/> : null}
       </g>)}
       {stages.map((s, i) => {
         const inside = seconds >= s.start && seconds <= s.end + .3;

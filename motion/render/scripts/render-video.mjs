@@ -3,7 +3,7 @@ import {mkdirSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {ensureSharedBrowserExecutable, runLocalRemotionCli} from "./remotion-browser-executable.mjs";
 import {ACTIVE_COMPOSITION_ID} from "../motion/composition-id.js";
-const output = fileURLToPath(new URL("../../output/pinn-elasticity.mp4", import.meta.url));
+const output = fileURLToPath(new URL("../../output/pinn-elasticity-anthropic.mp4", import.meta.url));
 mkdirSync(fileURLToPath(new URL("../../output/", import.meta.url)), {recursive: true});
 const browser = await ensureSharedBrowserExecutable();
 const args = ["render", ACTIVE_COMPOSITION_ID, output, "--codec", "h264", "--pixel-format", "yuv420p",
