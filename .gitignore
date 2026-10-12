@@ -3,5 +3,8 @@
 __pycache__/
 *.pyc
 demo/.qa/
-motion/output/
+motion/output/*
+!motion/output/pinn-elasticity-anthropic.mp4
+!motion/output/anthropic-poster.png
+!motion/output/pinn-elasticity.mp4
 motion/.qa/

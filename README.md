@@ -4,6 +4,8 @@
 
 当前是 **2026-10-12 首轮准备稿**：已整理对话要求、形成研究主线、分工与讨论方案、文献入口和 20 页 PPT 提纲。动画使用 **vibe-motion/create-vibe-motion** 渲染 MP4，按用户要求采用 **Anthropic 风格与用户的思源宋体 CN**；过程曲线可构造并明确标注，最后的核验数字沿用真实 PINN 实验。算法和案例尚未经过小组讨论定案；尚无正式 PPTX。
 
+公开仓库：[BallCard/ai-elasticity-discussion](https://github.com/BallCard/ai-elasticity-discussion)。仓库包含准备文档、可编辑动画工程、字体及两版 MP4，默认入口为 Anthropic 风格成片。
+
 ## 先看什么
 
 | 材料 | 用途 |
@@ -26,8 +28,8 @@
 
 - `docs/` 是准备材料，`slides/outline.md` 是内容源稿，`demo/` 保存数值算例与旧原型，`motion/` 保存渲染动画工程和成片；均不自动等于正式汇报版本。
 - 对话中的“PNPRNN”尚不能认定具体算法。当前选择 **PINN（Physics-Informed Neural Network）** 是准备建议。
-- 已引用现有课程笔记作为符号与受众基线，未复制教材或改动课程笔记项目。课程入口见 [弹性力学（A）](../course-notes-lab/courses/弹性力学（A）/README.md)。
-- 已在本目录初始化独立本地 Git 仓库。原始对话检索快照存于 `.local/conversation.json`，由 Git 忽略。没有远端仓库、推送、发布或组员消息发送。
+- 已引用现有课程笔记作为符号与受众基线。本机的 `course-notes-lab/courses/弹性力学（A）` 是另一个项目，教材和课件不包含在本仓库。
+- 本目录使用独立 Git 仓库；按用户 2026-10-12 的明确要求创建公开远端并推送。原始对话检索快照存于本机 `.local/conversation.json`，由 Git 忽略。
 
 ## 接下来由小组定案的内容
 
