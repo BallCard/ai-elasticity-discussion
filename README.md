@@ -2,7 +2,7 @@
 
 围绕老师给定主题组织小组讨论，最后完成 **10 分钟汇报 + 约 3 分钟讨论**。老师原通知初定 **2026 年 10 月 27 日**，建议 PPT 约 20 页；年份结合本次会话日期理解，日期仍保留“初定”状态。
 
-当前是 **2026-10-12 首轮准备稿**：已整理对话要求、形成研究主线、分工与讨论方案、文献入口、20 页 PPT 提纲，并制作真实 PINN 训练的可视化教学原型。算法和案例尚未经过小组讨论定案；尚无正式 PPTX。
+当前是 **2026-10-12 首轮准备稿**：已整理对话要求、形成研究主线、分工与讨论方案、文献入口和 20 页 PPT 提纲。动画按用户新要求使用 **vibe-motion/create-vibe-motion** 制作可编辑工程并渲染 MP4，沿用已验证的真实 PINN 训练数据。算法和案例尚未经过小组讨论定案；尚无正式 PPTX。
 
 ## 先看什么
 
@@ -13,8 +13,10 @@
 | [数学与方法准备](docs/technical-notes.md) | 三类方程、AI 介入位置、PINN 算例推导、二维迁移、可信性讨论 |
 | [文献与阅读路线](docs/reading-list.md) | 原始论文与作者教程；各自能支持什么，哪里不能外推 |
 | [PPT 逐页提纲](slides/outline.md) | 18 页正文合计 600 秒，2 页备份；核心句、图示、讲述与来源 |
-| [动画与算例说明](demo/README.md) | 离线回放、复现办法、动画分镜、验证结果 |
-| [训练动画](demo/index.html) | 用训练进度查看预测、解析解和独立残差，支持播放与暂停 |
+| [渲染动画工程](motion/README.md) | Vibe Motion / Remotion 可编辑源码、分镜、预览与 MP4 复现 |
+| [教学动画 MP4](motion/output/pinn-elasticity.mp4) | 36 秒、1080p、30fps：问题、方程、网络、真实训练与独立核验 |
+| [数值算例说明](demo/README.md) | 原始训练、验证、复现与数值依据 |
+| [旧数值探索原型](demo/index.html) | HTML 交互页，仅供查看数值，不是本次指定的动画成品 |
 
 建议主线：**学科背景 → 物理问题与假设 → 求解流程 → AI 改变的步骤 → 一个 PINN 模型 → 验证与适用条件 → 工程取舍与开放问题**。
 
@@ -22,7 +24,7 @@
 
 ## 项目边界
 
-- `docs/` 是准备材料，`slides/outline.md` 是内容源稿，`demo/` 是教学演示；均不自动等于正式汇报版本。
+- `docs/` 是准备材料，`slides/outline.md` 是内容源稿，`demo/` 保存数值算例与旧原型，`motion/` 保存渲染动画工程和成片；均不自动等于正式汇报版本。
 - 对话中的“PNPRNN”尚不能认定具体算法。当前选择 **PINN（Physics-Informed Neural Network）** 是准备建议。
 - 已引用现有课程笔记作为符号与受众基线，未复制教材或改动课程笔记项目。课程入口见 [弹性力学（A）](../course-notes-lab/courses/弹性力学（A）/README.md)。
 - 已在本目录初始化独立本地 Git 仓库。原始对话检索快照存于 `.local/conversation.json`，由 Git 忽略。没有远端仓库、推送、发布或组员消息发送。
@@ -34,4 +36,4 @@
 3. 核对推导与论文图表的具体条件，补齐工程证据，再依提纲制作 PPTX。
 4. 限时彩排，压缩到 10 分钟；保留一个真正能在 3 分钟内讨论的问题。
 
-本地打开动画无需安装依赖或联网。复现训练需要 Python、PyTorch、NumPy、Matplotlib，细节见 [demo/README.md](demo/README.md)。
+MP4 可直接播放或插入 PPT；编辑 / 重新渲染使用 [motion/README.md](motion/README.md) 中的 Vibe Motion 工程。数值训练复现需要 Python、PyTorch、NumPy、Matplotlib，见 [demo/README.md](demo/README.md)。

@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/vibe-motion/create-vibe-motion",
+  "commit": "2657ae9abadb89714bdabf0d3aef210e60ce1223",
+  "scaffold": "Official repository CLI after sync-template-to-cli.mjs, --skip-install",
+  "remotion": "4.0.438",
+  "node_used": "24.19.0",
+  "pnpm_used": "10.33.0",
+  "content": "Project-authored elasticity storyboard and scenes; original scaffold rendering support retained.",
+  "source_data": "../demo/training-data.json"
+}
