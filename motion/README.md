@@ -1,8 +1,8 @@
 # Vibe Motion 渲染动画
 
-本工程使用用户确认的 [vibe-motion/create-vibe-motion](https://github.com/vibe-motion/create-vibe-motion) 官方脚手架，教学场景编写在 `render/motion/`，通过其 Remotion 渲染流程输出视频。
+本工程基于 [vibe-motion/create-vibe-motion](https://github.com/vibe-motion/create-vibe-motion) 官方脚手架，教学场景编写在 `render/motion/`，通过 Remotion 渲染为可插入 PPT 的视频。
 
-当前成片：[pinn-elasticity-anthropic.mp4](output/pinn-elasticity-anthropic.mp4)。规格为 **1920×1080、30fps、36 秒、H.264、8 位 4:2:0、无音轨**，适合插入 PPT，由主讲同学现场讲解。按用户要求采用 Anthropic 风格的暖白纸色、炭黑文字、陶土色线条，并用用户安装的 **思源宋体 CN** 原始字体文件渲染。
+当前成片：[pinn-elasticity-anthropic.mp4](output/pinn-elasticity-anthropic.mp4)。规格为 **1920×1080、30fps、36 秒、H.264、8 位 4:2:0、无音轨**，适合插入 PPT，由主讲同学现场讲解。视觉采用 Anthropic 风格的暖白纸色、炭黑文字、陶土色线条；**思源宋体 CN** 的原始字体文件随工程提供并显式加载。
 
 此前深蓝版仍保留在 [pinn-elasticity.mp4](output/pinn-elasticity.mp4)，便于对照；项目与 PPT 入口以新版为准。
 
@@ -14,7 +14,7 @@
 - 18–29 秒：用构造的候选函数和解析残差展示逐步收敛；画面明确标注教学示意。
 - 29–36 秒：401 点独立核验，展示位移、导数 / 应力与残差结果，说明适用范围。
 
-最后核验的数字来自 [一维算例](../demo/README.md)，通过 `sync-data.mjs` 复制到动画工程；实际实验没有使用解析位移训练标签。用户已允许适当构造数据增强表达，因此训练段采用明确标注的构造函数轨迹，示意残差由该函数解析计算，不冒称实测优化日志。动画进度不表示杆的物理时间。具体视觉、字体与两类数据的区分见 [design.md](design.md)。
+最后核验的数字来自 [一维算例](../demo/README.md)，通过 `sync-data.mjs` 复制到动画工程；实际实验没有使用解析位移训练标签。训练段采用明确标注的构造函数轨迹增强表达，示意残差由该函数解析计算，不冒称实测优化日志。动画进度不表示杆的物理时间。具体视觉、字体与两类数据的区分见 [design.md](design.md)。
 
 原有 [HTML 数值探索页](../demo/index.html)与 GIF 保留作旧原型；本次动画交付以渲染的 MP4 为准。分镜见 [storyboard.md](storyboard.md)，公式依据见 [数学准备](../docs/technical-notes.md)。
 
@@ -35,15 +35,17 @@
 
 已使用 Node.js **24.19.0**、pnpm **10.33.0**、Remotion **4.0.438**。依赖版本保留在 [pnpm-lock.yaml](render/pnpm-lock.yaml)，不自动追随最新 Remotion。
 
-```powershell
-cd D:\Workspace\projects\ai-elasticity-discussion\motion\render
+从仓库根目录进入动画工程：
+
+```sh
+cd motion/render
 pnpm install --frozen-lockfile --registry https://registry.npmjs.org
 pnpm dev
 ```
 
 `pnpm dev` 打开 Remotion Studio 的可编辑预览。渲染成片：
 
-```powershell
+```sh
 pnpm run render:video
 ```
 
