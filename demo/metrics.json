@@ -1,0 +1,50 @@
+{
+  "config": {
+    "seed": 42,
+    "steps": 3000,
+    "dtype": "float64",
+    "device": "cpu",
+    "network": "1-16-16-1, tanh hidden layers",
+    "parameters": 321,
+    "optimizer": "Adam",
+    "learning_rate": 0.002,
+    "train_points": 64,
+    "validation_points": 401,
+    "export_points": 101,
+    "boundary": "hard, U=xi(1-xi)N",
+    "equation": "U''+sin(pi*xi)=0, U(0)=U(1)=0",
+    "training_labels": "none",
+    "torch": "2.9.1+cpu",
+    "numpy": "2.1.3",
+    "training_seconds_including_snapshots": 2.7230210999996416
+  },
+  "initial": {
+    "step": 0,
+    "train_loss": 0.18877427221571375,
+    "relative_u_l2": 0.5775622249585145,
+    "relative_derivative_l2": 0.5785085068603444,
+    "max_abs_u_error": 0.05938557927191432,
+    "residual_rms": 0.4204880554534825,
+    "residual_max_abs": 0.6372631676562929,
+    "boundary_max_abs": 0.0
+  },
+  "final": {
+    "step": 3000,
+    "train_loss": 1.4023995224149398e-08,
+    "relative_u_l2": 2.107549896101878e-05,
+    "relative_derivative_l2": 5.669078347241518e-05,
+    "max_abs_u_error": 3.4307186533230616e-06,
+    "residual_rms": 0.00016541216382311627,
+    "residual_max_abs": 0.0005769614308421382,
+    "boundary_max_abs": 0.0
+  },
+  "fem": {
+    "elements": 100,
+    "relative_u_l2": 8.991867653826375e-05,
+    "relative_derivative_l2": 0.009594989146672011,
+    "max_abs_u_error": 1.2498200919489055e-05,
+    "linear_solve_seconds_only": 0.00038249999943218427,
+    "note": "FEM derivative is elementwise constant; values at interfaces use the right element. Timing excludes assembly and is not a performance benchmark."
+  },
+  "limits": "One seed, one smooth 1D instance. Sampled validation, no global proof, no out-of-distribution test, no engineering deployment."
+}

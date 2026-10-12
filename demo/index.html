@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>从方程到解 · 弹性杆 PINN 训练回放</title>
+<style>
+:root{color-scheme:light dark;--bg:light-dark(#f5f7fa,#111821);--fg:light-dark(#182b3b,#ecf0f4);--muted:light-dark(#4c6170,#b1c1ce);--panel:light-dark(#fff,#1a2531);--line:light-dark(#ccd7df,#415362);--pred:light-dark(#007a72,#51d6c8);--exact:light-dark(#9d4b14,#ffb979);--res:light-dark(#7050b6,#c4a5fa);--soft:light-dark(#eaf0f5,#273746)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:"Microsoft YaHei",system-ui,sans-serif;font-size:16px;line-height:1.6}main{max-width:1120px;margin:auto;padding:36px 28px}h1{font-size:30px;font-weight:600;margin:4px 0 8px}h2{font-size:18px;font-weight:500;margin:0 0 8px}.eyebrow{letter-spacing:.1em;font-size:12px;color:var(--muted)}p{margin:0;color:var(--muted)}.intro{max-width:850px}.pipeline{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 16px;font-size:14px}.pipeline span{padding:6px 12px;background:var(--soft);border-radius:5px}.pipeline b{font-weight:400;align-self:center;color:var(--muted)}.panel{background:var(--panel);padding:20px;border-radius:12px;margin-top:16px}.controls{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}.control-label{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:14px;margin-bottom:6px}button,select{font:inherit;color:var(--fg);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:9px 14px}button{cursor:pointer}button.primary{background:var(--pred);color:var(--panel);border-color:var(--pred)}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--exact);outline-offset:3px}input[type=range]{width:100%;accent-color:var(--pred)}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0 4px}.metric label{display:block;color:var(--muted);font-size:13px}.metric strong{font-size:24px;font-weight:500;font-variant-numeric:tabular-nums}.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.plot{width:100%;display:block;height:260px}.plot text,.rod text{font-family:inherit;fill:var(--fg);font-size:12px}.plot .grid{stroke:var(--line);stroke-width:1;opacity:.6}.plot .frame{fill:none;stroke:var(--line)}.plot .prediction{fill:none;stroke:var(--pred);stroke-width:2.5}.plot .reference{fill:none;stroke:var(--exact);stroke-width:2;stroke-dasharray:7 5}.plot .residual{fill:none;stroke:var(--res);stroke-width:2.2}.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;margin-bottom:12px}.legend span{display:flex;gap:8px;align-items:center}.legend i{display:inline-block;width:28px;border-top:3px solid var(--pred)}.legend i.exact{border-top:2px dashed var(--exact)}.legend i.res{border-top-color:var(--res)}.rod{width:100%;height:106px;display:block}.note{font-size:13px;color:var(--muted);margin-top:10px}.footer{font-size:13px;margin-top:20px}.footer a{color:var(--pred)}.readout{font-size:14px;margin:12px 0 0;min-height:24px}.error{color:var(--exact)}.mono{font-variant-numeric:tabular-nums}svg path,svg line,svg rect{vector-effect:non-scaling-stroke}
+@media(max-width:720px){main{padding:20px 16px}h1{font-size:24px}.chart-grid{grid-template-columns:1fr}.panel{padding:16px}.controls{grid-template-columns:auto 1fr;gap:12px}.controls>select{grid-column:1/-1}.metrics{gap:10px}.metric strong{font-size:20px}.plot{height:250px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<main id="pinn-demo">
+  <div class="eyebrow">AI × ELASTICITY · 教学原型</div>
+  <h1>从方程到解，看看网络学到了什么</h1>
+  <p class="intro">两端固定的弹性杆，轴向分布荷载呈正弦分布。网络只用方程训练，解析解留作核验；这里回放已经完成的真实训练，不在浏览器中重新训练。</p>
+  <div class="pipeline" aria-label="PINN 训练流程">
+    <span>空间坐标 ξ</span><b>→</b><span>位移网络 U</span><b>→</b><span>自动微分</span><b>→</b><span>方程残差</span><b>→</b><span>更新参数 θ</span>
+  </div>
+  <section class="panel" aria-label="训练回放控制">
+    <div class="controls">
+      <button type="button" class="primary" id="play">播放训练</button>
+      <div>
+        <div class="control-label"><label for="progress">训练快照</label><span class="mono" id="step">等待数据</span></div>
+        <input id="progress" type="range" min="0" max="1" value="0" step="1">
+      </div>
+      <select id="quantity" aria-label="选择查看的场量"><option value="u">位移 U</option><option value="du">归一化应力 U′</option></select>
+    </div>
+    <div class="metrics" aria-label="独立验证指标">
+      <div class="metric"><label>位移相对 L₂ 误差</label><strong id="u-error">—</strong></div>
+      <div class="metric"><label>导数 / 应力相对 L₂ 误差</label><strong id="d-error">—</strong></div>
+      <div class="metric"><label>独立残差 RMS</label><strong id="r-error">—</strong></div>
+    </div>
+    <p class="readout mono" id="readout" aria-live="polite"></p>
+  </section>
+  <section class="panel" aria-label="轴向位移示意">
+    <h2>杆的轴向位移示意（放大）</h2>
+    <svg id="rod" class="rod" role="img" aria-label="固定端之间的杆节点沿轴向移动，灰色标记为原位置，彩色标记为网络预测位置"></svg>
+    <p class="note">节点沿杆轴向移动，显示倍率由全部快照统一确定。下方曲线是场量图，曲线的高度不表示杆弯曲。</p>
+  </section>
+  <section class="panel" aria-label="预测与独立验证图">
+    <div class="legend"><span><i></i>网络预测</span><span><i class="exact"></i>解析参考</span><span><i class="res"></i>方程残差</span></div>
+    <div class="chart-grid">
+      <div><h2 id="field-title">位移场</h2><svg id="field-plot" class="plot" role="img" aria-label="网络位移与解析解随空间坐标的对比"></svg></div>
+      <div><h2>方程残差</h2><svg id="residual-plot" class="plot" role="img" aria-label="独立位置上的方程残差随空间坐标的变化"></svg></div>
+    </div>
+    <p class="note">训练：64 个随机内部点；验证：401 个均匀点。图形显示其中 101 点，数字来自完整验证网格。硬边界使端点恒为零。</p>
+  </section>
+  <section class="panel" aria-label="实验条件与范围">
+    <h2>这个演示证明到哪里</h2>
+    <p>U″ + sin(πξ) = 0，U(0) = U(1) = 0；U = ξ(1−ξ)Nθ。一次训练、一个平滑的一维问题。换载荷形状、材料分布或几何后的泛化没有在此验证。</p>
+    <p class="note" id="baseline">读取传统离散方法基准…</p>
+    <p class="note">训练进度表示优化迭代，播放中的帧间插值仅使画面平滑，并不增加实验数据。不是杆在物理时间中的振动；不能由此宣称 PINN 在工程中更快。</p>
+  </section>
+  <p class="footer">推导与复现：<a href="README.md">算例说明</a> · <a href="metrics.json">完整数值</a> · <a href="../docs/technical-notes.md">数学准备</a> · <a href="../slides/outline.md">汇报提纲</a></p>
+</main>
+<script src="training-data.js"></script>
+<script>
+(() => {
+  'use strict';
+  const root = document.getElementById('pinn-demo');
+  const el = id => root.querySelector('#'+id);
+  const data = window.PINN_DEMO_DATA;
+  if (!data || !data.snapshots?.length) { el('readout').textContent='未找到训练数据，请将本页与 training-data.js 保存在同一目录。';el('readout').classList.add('error');el('play').disabled=true;return; }
+  const frames = data.snapshots, ns='http://www.w3.org/2000/svg';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let index=0,playing=false,raf=0,start=0,origin=0;
+  el('progress').max=frames.length-1;
+  const percent=v=>(v*100).toFixed(v<0.001?3:2)+'%';
+  const range=values=>{const lo=Math.min(...values,0),hi=Math.max(...values,0);const p=Math.max((hi-lo)*.08,1e-6);return [lo-p,hi+p];};
+  const domains={u:range([...data.exact_u,...frames.flatMap(f=>f.u)]),du:range([...data.exact_du,...frames.flatMap(f=>f.du)]),r:range(frames.flatMap(f=>f.r))};
+  const residualLimit=Math.max(...frames.flatMap(f=>f.r.map(Math.abs)))*1.08;
+  domains.r=[-residualLimit,residualLimit];
+  const maxU=Math.max(...frames.flatMap(f=>f.u.map(Math.abs)),1e-6);
+  function make(tag,attrs={},content){const n=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);if(content!==undefined)n.textContent=content;return n;}
+  function drawPlot(svg,values,reference,key){
+    const width=Math.max(280,svg.clientWidth),height=svg.clientHeight;
+    svg.replaceChildren();svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+    const left=67,right=18,top=14,bottom=51,w=width-left-right,h=height-top-bottom;
+    const [lo,hi]=domains[key],sx=x=>left+x*w,sy=y=>top+(hi-y)/(hi-lo)*h;
+    const defs=make('defs'),clip=make('clipPath',{id:svg.id+'-clip'});clip.append(make('rect',{x:left,y:top,width:w,height:h}));defs.append(clip);svg.append(defs);
+    svg.append(make('title',{},key==='r'?'独立验证网格上的平衡残差':'网络预测与解析参考解'));
+    svg.append(make('rect',{x:left,y:top,width:w,height:h,class:'frame'}));
+    const ticks=width<400?[0,.5,1]:[0,.25,.5,.75,1];
+    ticks.forEach(t=>{svg.append(make('line',{x1:sx(t),x2:sx(t),y1:top,y2:top+h,class:'grid'}));svg.append(make('text',{x:sx(t),y:top+h+21,'text-anchor':'middle'},String(t)));});
+    for(let i=0;i<5;i++){const v=lo+(hi-lo)*i/4,y=sy(v);svg.append(make('line',{x1:left,x2:left+w,y1:y,y2:y,class:'grid'}));svg.append(make('text',{x:left-9,y:y+4,'text-anchor':'end'},v.toFixed(3)));}
+    const path=arr=>arr.map((v,i)=>(i?'L':'M')+sx(data.x[i]).toFixed(2)+','+sy(v).toFixed(2)).join(' ');
+    svg.append(make('path',{d:path(values),class:key==='r'?'residual':'prediction','clip-path':`url(#${svg.id}-clip)`}));
+    if(reference)svg.append(make('path',{d:path(reference),class:'reference','clip-path':`url(#${svg.id}-clip)`}));
+    svg.append(make('text',{x:left+w/2,y:height-8,'text-anchor':'middle',class:'axis-title','data-axis':'x'},'空间坐标 ξ（无量纲）'));
+    svg.append(make('text',{x:17,y:top+h/2,transform:`rotate(-90 17 ${top+h/2})`,'text-anchor':'middle',class:'axis-title','data-axis':'y'},key==='r'?'残差 r（无量纲）':key==='u'?'位移 U（无量纲）':'应力 U′（归一化）'));
+  }
+  function drawRod(values){
+    const svg=el('rod'),width=Math.max(280,svg.clientWidth),left=36,right=width-36,y=56,len=right-left;
+    svg.replaceChildren();svg.setAttribute('viewBox',`0 0 ${width} 106`);
+    svg.append(make('line',{x1:left,x2:right,y1:y,y2:y,stroke:'var(--line)','stroke-width':13}));
+    for(const x of [left,right]){svg.append(make('line',{x1:x,x2:x,y1:40,y2:72,stroke:'var(--fg)','stroke-width':3}));}
+    for(let i=0;i<=20;i++){const xi=i/20,x=left+xi*len,u=values[i*5],shift=u/maxU*len*.075;svg.append(make('line',{x1:x,x2:x,y1:43,y2:70,stroke:'var(--muted)','stroke-width':1,opacity:.45}));svg.append(make('line',{x1:x+shift,x2:x+shift,y1:43,y2:70,stroke:'var(--pred)','stroke-width':2}));}
+    svg.append(make('text',{x:left,y:96,'text-anchor':'middle'},'ξ = 0'));
+    svg.append(make('text',{x:right,y:96,'text-anchor':'middle'},'ξ = 1'));
+    svg.append(make('text',{x:width/2,y:23,'text-anchor':'middle'},'两端固定 · 轴向荷载 q₀sin(πξ) →'));
+  }
+  function draw(frame){
+    const key=el('quantity').value;
+    el('field-title').textContent=key==='u'?'位移场':'归一化应力场';
+    el('field-plot').setAttribute('aria-label',key==='u'?'位移预测与解析解的对比':'归一化应力预测与解析解的对比');
+    drawPlot(el('field-plot'),frame[key],key==='u'?data.exact_u:data.exact_du,key);
+    drawPlot(el('residual-plot'),frame.r,null,'r');drawRod(frame.u);
+  }
+  function show(i){index=i;el('progress').value=i;const f=frames[i];el('step').textContent=`第 ${f.step} / ${data.config.steps} 次迭代`;
+    el('u-error').textContent=percent(f.relative_u_l2);el('d-error').textContent=percent(f.relative_derivative_l2);el('r-error').textContent=f.residual_rms.toExponential(2);
+    el('readout').textContent=`训练点均方残差 ${f.train_loss.toExponential(2)} · 独立残差峰值 ${f.residual_max_abs.toExponential(2)} · 端点误差 ${f.boundary_max_abs.toExponential(1)}`;draw(f);
+  }
+  function stop(){playing=false;cancelAnimationFrame(raf);el('play').textContent=index===frames.length-1?'重新播放':'播放训练';el('play').setAttribute('aria-pressed','false');}
+  function tick(now){
+    if(!playing)return;const position=origin+(now-start)/300,lo=Math.min(Math.floor(position),frames.length-1);
+    if(lo!==index)show(lo);
+    if(lo===frames.length-1){stop();return;}
+    if(!reduced){const a=frames[lo],b=frames[lo+1],t=position-lo,blend={...a};for(const k of ['u','du','r'])blend[k]=a[k].map((v,j)=>v+(b[k][j]-v)*t);draw(blend);}
+    raf=requestAnimationFrame(tick);
+  }
+  el('play').addEventListener('click',()=>{if(playing){stop();show(index);return;}if(index===frames.length-1)show(0);playing=true;origin=index;start=performance.now();el('play').textContent='暂停';el('play').setAttribute('aria-pressed','true');raf=requestAnimationFrame(tick);});
+  el('progress').addEventListener('input',()=>{stop();show(Number(el('progress').value));});
+  el('quantity').addEventListener('change',()=>draw(frames[index]));
+  new ResizeObserver(()=>draw(frames[index])).observe(el('field-plot'));
+  el('baseline').textContent=`同题 100 个线性杆单元：位移相对 L₂ 误差 ${percent(data.fem.relative_u_l2)}，导数误差 ${percent(data.fem.relative_derivative_l2)}。有限元导数按分段常值计算，本例不比较整体运行效率。`;
+  show(0);window.PINN_DEMO_STATE=()=>({index,playing,step:frames[index].step,quantity:el('quantity').value,frames:frames.length});
+})();
+</script>
+</body>
+</html>
